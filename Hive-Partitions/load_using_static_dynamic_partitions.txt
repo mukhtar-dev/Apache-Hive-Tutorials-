@@ -1,0 +1,45 @@
+Loading the Data into hive partitioned table (Static and Dynamic) 
+-----------------------------------
+1- create the database for the test 
+
+create database mytest location '/user/hive/warehouse/mytest.db';
+
+
+2- create partition table to holed the data (employees data ) 
+
+create table mytest.emp ( id int , name string , sal double ,dept int) partitioned by (pyear string)
+row format delimited fields terminated by ",";
+
+
+
+3- Loading the data using static partition 
+
+
+load data local inpath '/home/edureka/emp.txt' into table mytest.emp partition(pyear=2019);
+
+
+4- loading the using dynamic partition 
+-- sample of the emp.txt data
+1,ali,4500,10,2019
+2,omer,3444,20,2018
+3,sami,4000,30,2019
+
+
+-- create staing table as you can not load data directory from files into hive managed table directly 
+create table mytest.emp_stg ( id int , name string , sal double ,dept int,pyear string)  
+row format delimited fields terminated by ",";
+
+-- load the data into the staging table 
+
+load data local inpath '/home/edureka/emp.txt'   into table mytest.emp_stg  ;
+
+
+-- first you have to change the hive configuration to nonstrict partition (dynamic)
+
+set hive.exec.dynamic.partition.mode=nonstrict;
+set hive.exec.dynamic.partition=true;
+
+-- insert the data dynamicly from the staging table into the partitioned table 
+insert into table mytest.emp partition(pyear) select * from mytest.emp_stg; 
+select * from mytest.emp_stg;
+select * from mytest.emp where pyear='2018';
